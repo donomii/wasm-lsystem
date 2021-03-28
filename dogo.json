@@ -1,0 +1,10 @@
+{
+    "WorkingDir": ".",
+    "SourceDir": [
+        "."
+    ],
+    "SourceExt": [".c", ".cpp", ".go", ".h"],
+    "BuildCmd": "makefile.bat",
+    "RunCmd": "wasm-rotating-cube.exe",
+    "Decreasing": 1
+}

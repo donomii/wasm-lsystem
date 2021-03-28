@@ -4,6 +4,10 @@ import (
 	"syscall/js"
 	"unsafe"
 
+	"github.com/donomii/sceneCamera"
+
+	"github.com/donomii/wasm-rotating-cube/lsystem"
+
 	"github.com/bobcob7/wasm-rotating-cube/gltypes"
 	"github.com/go-gl/mathgl/mgl32"
 )
@@ -60,7 +64,36 @@ void main(void) {
 }
 `
 
+func Rotate(movMatrix mgl32.Mat4, x, y, z float32) mgl32.Mat4 {
+	movMatrix = movMatrix.Mul4(mgl32.HomogRotate3DX(x))
+	movMatrix = movMatrix.Mul4(mgl32.HomogRotate3DY(y))
+	movMatrix = movMatrix.Mul4(mgl32.HomogRotate3DZ(z))
+	return movMatrix
+}
+
+func Move(movMatrix mgl32.Mat4, x, y, z float32) mgl32.Mat4 {
+	movMatrix = movMatrix.Mul4(mgl32.Translate3D(x, y, z))
+	return movMatrix
+}
+
+func resetCam(camera *sceneCamera.SceneCamera) {
+	camera.Reset()
+	camera.Translate(0.0, 0.0, 0.0)
+	//camera.LookAt(0.0, 0.2, 0.0)
+	camera.LookAt(0.0, 0.0, 0.0)
+}
+
 func main() {
+	var camera *sceneCamera.SceneCamera = sceneCamera.New()
+	resetCam(camera)
+	//Init lystem
+	lsystem.InitGallery()
+
+	sceneList := lsystem.InitScenes(camera)
+	CurrentScene := sceneList[0]
+	CurrentScene.Init(CurrentScene)
+	//sceneString := lsystem.Expand(CurrentScene.Gallery[0])
+
 	// Init Canvas stuff
 	doc := js.Global().Get("document")
 	canvasEl := doc.Call("getElementById", "gocanvas")
@@ -178,9 +211,10 @@ func main() {
 		rotation = rotation + float32(tdiff)/500
 
 		// Do new model matrix calculations
-		movMatrix = mgl32.HomogRotate3DX(0.5 * rotation)
-		movMatrix = movMatrix.Mul4(mgl32.HomogRotate3DY(0.3 * rotation))
-		movMatrix = movMatrix.Mul4(mgl32.HomogRotate3DZ(0.2 * rotation))
+		movMatrix = mgl32.Ident4()
+
+		movMatrix = Rotate(movMatrix, 0.5*rotation, 0.3*rotation, 0.2*rotation)
+		movMatrix = Move(movMatrix, 1.0, 0.0, 0.0)
 
 		// Convert model matrix to a JS TypedArray
 		var modelMatrixBuffer *[16]float32
@@ -195,8 +229,21 @@ func main() {
 		gl.Call("clear", glTypes.ColorBufferBit)
 		gl.Call("clear", glTypes.DepthBufferBit)
 
-		// Draw the cube
-		gl.Call("drawElements", glTypes.Triangles, len(indicesNative), glTypes.UnsignedShort, 0)
+		for i := 0; i < 1; i = i + 1 {
+			movMatrix = Move(movMatrix, 1.0, 0.0, 0.0)
+
+			//fmt.Println("Example movMatrix: ", movMatrix)
+			// Convert model matrix to a JS TypedArray
+			var modelMatrixBuffer *[16]float32
+			modelMatrixBuffer = (*[16]float32)(unsafe.Pointer(&movMatrix))
+			typedModelMatrixBuffer := gltypes.SliceToTypedArray([]float32((*modelMatrixBuffer)[:]))
+			// Apply the model matrix
+			gl.Call("uniformMatrix4fv", ModelMatrix, false, typedModelMatrixBuffer)
+			// Draw the cube
+			//gl.Call("drawElements", glTypes.Triangles, len(indicesNative), glTypes.UnsignedShort, 0)
+			//lsystem.Draw(CurrentScene, camera.ViewMatrix(), lsystem.S(" F F F deg20 f cube r p f cube r p f HR cube r p f cube r p f cube"), movMatrix, true, true, ModelMatrix, gl, indicesNative)
+			lsystem.Draw(CurrentScene, camera.ViewMatrix(), lsystem.S(" F F F cube f cube f cube HR deg90 f p  cube  f cube  f cube HR deg90 f p  cube  f cube  f cube"), movMatrix, true, true, ModelMatrix, gl, indicesNative)
+		}
 
 		// Call next frame
 		js.Global().Call("requestAnimationFrame", renderFrame)
