@@ -38,5 +38,5 @@ func main() {
 		w.Write(wasmData)
 	})
 
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Fatal(http.ListenAndServe(":8081", nil))
 }
