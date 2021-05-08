@@ -293,6 +293,7 @@ func paintCube(camera mgl32.Mat4, trans mgl32.Mat4, name string, a attribs, Mode
 
 }
 
+/*
 func paintVertices(camera mgl32.Mat4, trans mgl32.Mat4, name string, a attribs, ModelMatrix js.Value, gl js.Value) {
 	var glTypes gltypes.GLTypes
 	glTypes.New(gl)
@@ -318,3 +319,4 @@ func paintVertices(camera mgl32.Mat4, trans mgl32.Mat4, name string, a attribs, 
 
 	checkGlErr()
 }
+*/
