@@ -94,7 +94,7 @@ func quad() []float32 {
 	return triangleData
 }
 func checkGlErr() {}
-func Draw(CurrentScene *Scene, camera mgl32.Mat4, start []string, trans mgl32.Mat4, buildMode bool, mirrorOpt bool, ModelMatrix js.Value, gl js.Value, indicesNative []uint16) ([]float32, []float32) {
+func Draw(CurrentScene *Scene, camera mgl32.Mat4, start []string, trans mgl32.Mat4, buildMode bool, mirrorOpt bool, ModelMatrix js.Value, gl js.Value) ([]float32, []float32) {
 
 	var setAngleRegex = regexp.MustCompile(`A([0-9.]+)`)
 	var setDegreeRegex = regexp.MustCompile(`deg([0-9.]+)`)
@@ -183,6 +183,7 @@ func Draw(CurrentScene *Scene, camera mgl32.Mat4, start []string, trans mgl32.Ma
 			a.green = float32(parsedNum / 255)
 			parsedNum, _ = strconv.ParseFloat(match[3], 32)
 			a.blue = float32(parsedNum / 255)
+			a.alpha = 1.0
 		case setAngleRegex.FindString(c) != "":
 			var match = setAngleRegex.FindStringSubmatch(c)
 			parsedNum, _ := strconv.ParseFloat(match[1], 32)
@@ -259,7 +260,7 @@ func Draw(CurrentScene *Scene, camera mgl32.Mat4, start []string, trans mgl32.Ma
 			//log.Println("'", c, "'")
 
 			log.Println("Paint: ", c)
-			paintCube(camera, trans, c, a, ModelMatrix, gl, indicesNative)
+			//paintCube(camera, trans, c, a, ModelMatrix, gl, indicesNative)
 
 		}
 	}
@@ -287,7 +288,7 @@ func paintCube(camera mgl32.Mat4, trans mgl32.Mat4, name string, a attribs, Mode
 	// Apply the model matrix
 	gl.Call("uniformMatrix4fv", ModelMatrix, false, typedModelMatrixBuffer)
 	// Draw the cube
-	gl.Call("drawElements", glTypes.Triangles, len(indicesNative), glTypes.UnsignedShort, 0)
+	//gl.Call("drawElements", glTypes.Triangles, len(indicesNative), glTypes.UnsignedShort, 0)
 
 	checkGlErr()
 
@@ -315,7 +316,7 @@ func paintVertices(camera mgl32.Mat4, trans mgl32.Mat4, name string, a attribs, 
 	// Apply the model matrix
 	gl.Call("uniformMatrix4fv", ModelMatrix, false, typedModelMatrixBuffer)
 	// Draw the cube
-	gl.Call("drawElements", glTypes.Triangles, len(indicesNative), glTypes.UnsignedShort, 0)
+	//gl.Call("drawElements", glTypes.Triangles, len(indicesNative), glTypes.UnsignedShort, 0)
 
 	checkGlErr()
 }

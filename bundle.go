@@ -242,7 +242,30 @@ func main() {
 			//gl.Call("drawElements", glTypes.Triangles, len(indicesNative), glTypes.UnsignedShort, 0)
 			//lsystem.Draw(CurrentScene, camera.ViewMatrix(), lsystem.S(" F F F deg20 f cube r p f cube r p f HR cube r p f cube r p f cube"), movMatrix, true, true, ModelMatrix, gl, indicesNative)
 			//lsystem.Draw(CurrentScene, camera.ViewMatrix(), lsystem.S(" F F F cube f cube f cube HR deg90 f p  cube  f cube  f cube HR deg90 f p  cube  f cube  f cube"), movMatrix, true, true, ModelMatrix, gl, indicesNative)
-			lsystem.Draw(CurrentScene, camera.ViewMatrix(), lsystem.S(" F F F cube f cube f cube HR Q"), movMatrix, true, true, ModelMatrix, gl, indicesNative)
+			verticesNative, colorsNative := lsystem.Draw(CurrentScene, camera.ViewMatrix(), lsystem.S(" HR Colour255,0,0 F F F f   f f HR Q"), movMatrix, true, true, ModelMatrix, gl)
+
+			indicesNative := make([]uint16, len(verticesNative))
+			for i, _ := range indicesNative {
+				indicesNative[i] = uint16(i)
+			}
+			var colors = gltypes.SliceToTypedArray(colorsNative)
+			var vertices = gltypes.SliceToTypedArray(verticesNative)
+			var indices = gltypes.SliceToTypedArray(indicesNative)
+			// Create vertex buffer
+
+			gl.Call("bindBuffer", glTypes.ArrayBuffer, vertexBuffer)
+			gl.Call("bufferData", glTypes.ArrayBuffer, vertices, glTypes.StaticDraw)
+
+			// Create color buffer
+
+			gl.Call("bindBuffer", glTypes.ArrayBuffer, colorBuffer)
+			gl.Call("bufferData", glTypes.ArrayBuffer, colors, glTypes.StaticDraw)
+
+			// Create index buffer
+
+			gl.Call("bindBuffer", glTypes.ElementArrayBuffer, indexBuffer)
+			gl.Call("bufferData", glTypes.ElementArrayBuffer, indices, glTypes.StaticDraw)
+			gl.Call("drawElements", glTypes.Triangles, len(indicesNative), glTypes.UnsignedShort, 0)
 		}
 
 		// Call next frame
