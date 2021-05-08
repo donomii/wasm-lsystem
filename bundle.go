@@ -79,7 +79,6 @@ func Move(movMatrix mgl32.Mat4, x, y, z float32) mgl32.Mat4 {
 func resetCam(camera *sceneCamera.SceneCamera) {
 	camera.Reset()
 	camera.Translate(0.0, 0.0, 0.0)
-	//camera.LookAt(0.0, 0.2, 0.0)
 	camera.LookAt(0.0, 0.0, 0.0)
 }
 
@@ -242,7 +241,8 @@ func main() {
 			// Draw the cube
 			//gl.Call("drawElements", glTypes.Triangles, len(indicesNative), glTypes.UnsignedShort, 0)
 			//lsystem.Draw(CurrentScene, camera.ViewMatrix(), lsystem.S(" F F F deg20 f cube r p f cube r p f HR cube r p f cube r p f cube"), movMatrix, true, true, ModelMatrix, gl, indicesNative)
-			lsystem.Draw(CurrentScene, camera.ViewMatrix(), lsystem.S(" F F F cube f cube f cube HR deg90 f p  cube  f cube  f cube HR deg90 f p  cube  f cube  f cube"), movMatrix, true, true, ModelMatrix, gl, indicesNative)
+			//lsystem.Draw(CurrentScene, camera.ViewMatrix(), lsystem.S(" F F F cube f cube f cube HR deg90 f p  cube  f cube  f cube HR deg90 f p  cube  f cube  f cube"), movMatrix, true, true, ModelMatrix, gl, indicesNative)
+			lsystem.Draw(CurrentScene, camera.ViewMatrix(), lsystem.S(" F F F cube f cube f cube HR Q"), movMatrix, true, true, ModelMatrix, gl, indicesNative)
 		}
 
 		// Call next frame

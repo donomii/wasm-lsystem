@@ -255,24 +255,18 @@ func Draw(CurrentScene *Scene, camera mgl32.Mat4, start []string, trans mgl32.Ma
 			a.useLighting = true
 		case c == "LightsOff":
 			a.useLighting = false
-		case c == "mirrorOn":
-			a.mirror = true
-			//camera = compose(mgl32.Scale3D(1.0,-1.0,1.0), camera)
-		case c == "mirrorOff":
-			a.mirror = false
-			//camera = compose(mgl32.Scale3D(1.0,-1.0,1.0), camera)
 		default:
 			//log.Println("'", c, "'")
 
 			log.Println("Paint: ", c)
-			paintIt(camera, trans, c, a, ModelMatrix, gl, indicesNative)
+			paintCube(camera, trans, c, a, ModelMatrix, gl, indicesNative)
 
 		}
 	}
 	return triBuf, colBuf
 }
 
-func paintIt(camera mgl32.Mat4, trans mgl32.Mat4, name string, a attribs, ModelMatrix js.Value, gl js.Value, indicesNative []uint16) {
+func paintCube(camera mgl32.Mat4, trans mgl32.Mat4, name string, a attribs, ModelMatrix js.Value, gl js.Value, indicesNative []uint16) {
 	var glTypes gltypes.GLTypes
 	glTypes.New(gl)
 	if len(name) == 0 {
@@ -297,4 +291,30 @@ func paintIt(camera mgl32.Mat4, trans mgl32.Mat4, name string, a attribs, ModelM
 
 	checkGlErr()
 
+}
+
+func paintVertices(camera mgl32.Mat4, trans mgl32.Mat4, name string, a attribs, ModelMatrix js.Value, gl js.Value) {
+	var glTypes gltypes.GLTypes
+	glTypes.New(gl)
+	if len(name) == 0 {
+		//log.Printf("Empty name, refusing to draw")
+		return
+	}
+	log.Printf("Starting %v", name)
+
+	checkGlErr()
+
+	log.Println("Drawing object:", name)
+	final := trans.Mul4(mgl32.Scale3D(0.5, 0.5, 0.5))
+	//fmt.Println(final)
+	// Convert model matrix to a JS TypedArray
+	var modelMatrixBuffer *[16]float32
+	modelMatrixBuffer = (*[16]float32)(unsafe.Pointer(&final))
+	typedModelMatrixBuffer := gltypes.SliceToTypedArray([]float32((*modelMatrixBuffer)[:]))
+	// Apply the model matrix
+	gl.Call("uniformMatrix4fv", ModelMatrix, false, typedModelMatrixBuffer)
+	// Draw the cube
+	gl.Call("drawElements", glTypes.Triangles, len(indicesNative), glTypes.UnsignedShort, 0)
+
+	checkGlErr()
 }
