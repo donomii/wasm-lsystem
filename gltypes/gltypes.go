@@ -5,6 +5,7 @@ import "syscall/js"
 // GLTypes provides WebGL bindings.
 type GLTypes struct {
 	StaticDraw         js.Value
+	StreamDraw         js.Value
 	ArrayBuffer        js.Value
 	ElementArrayBuffer js.Value
 	VertexShader       js.Value
@@ -22,6 +23,7 @@ type GLTypes struct {
 // New grabs the WebGL bindings from a GL context.
 func (types *GLTypes) New(gl js.Value) {
 	types.StaticDraw = gl.Get("STATIC_DRAW")
+	types.StreamDraw = gl.Get("STREAM_DRAW")
 	types.ArrayBuffer = gl.Get("ARRAY_BUFFER")
 	types.ElementArrayBuffer = gl.Get("ELEMENT_ARRAY_BUFFER")
 	types.VertexShader = gl.Get("VERTEX_SHADER")

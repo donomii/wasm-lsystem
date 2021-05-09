@@ -78,6 +78,7 @@ func Move(movMatrix mgl32.Mat4, x, y, z float32) mgl32.Mat4 {
 
 func resetCam(camera *sceneCamera.SceneCamera) {
 	camera.Reset()
+	camera.SetPosition(0, 0, 1)
 	camera.Translate(0.0, 0.0, 0.0)
 	camera.LookAt(0.0, 0.0, 0.0)
 }
@@ -212,8 +213,8 @@ func main() {
 		// Do new model matrix calculations
 		movMatrix = mgl32.Ident4()
 
-		movMatrix = Rotate(movMatrix, 0.5*rotation, 0.3*rotation, 0.2*rotation)
-		movMatrix = Move(movMatrix, 1.0, 0.0, 0.0)
+		//movMatrix = Rotate(movMatrix, 0.5*rotation, 0.3*rotation, 0.2*rotation)
+		//movMatrix = Move(movMatrix, 1.0, 0.0, 0.0)
 
 		// Convert model matrix to a JS TypedArray
 		var modelMatrixBuffer *[16]float32
@@ -242,15 +243,65 @@ func main() {
 			//gl.Call("drawElements", glTypes.Triangles, len(indicesNative), glTypes.UnsignedShort, 0)
 			//lsystem.Draw(CurrentScene, camera.ViewMatrix(), lsystem.S(" F F F deg20 f cube r p f cube r p f HR cube r p f cube r p f cube"), movMatrix, true, true, ModelMatrix, gl, indicesNative)
 			//lsystem.Draw(CurrentScene, camera.ViewMatrix(), lsystem.S(" F F F cube f cube f cube HR deg90 f p  cube  f cube  f cube HR deg90 f p  cube  f cube  f cube"), movMatrix, true, true, ModelMatrix, gl, indicesNative)
-			verticesNative, colorsNative := lsystem.Draw(CurrentScene, camera.ViewMatrix(), lsystem.S(" HR Colour255,0,0 F F F f   f f HR Q"), movMatrix, true, true, ModelMatrix, gl)
+			verticesNative, colorsNative := lsystem.Draw(CurrentScene, camera.ViewMatrix(), lsystem.S(`
+			Colour254,254,254 deg30 r r F p p p f f f f [
+				s s s s
+				[ s s Icosahedron ] TF TF TF TF 
+				Tetrahedron  Arrow  F  Arrow  F  Arrow  F  
+				[ p p p s s s starburst ] Arrow  F  Arrow  F  Arrow  F 
+				[ p p p s s leaf ] Arrow  F  Arrow  F  Arrow  F 	
+				[ P P P  S S Square ] Arrow  F  Arrow  F  Arrow  F 
+				[ p p p s s s lineStar ] TF TF TF
+				[ p p p s s HR Flower ] TF TF TF
+				[ p p p s s HR Flower12 ] TF TF TF
+				[ p p p s s HR Flower11 ] TF TF TF
+				[ p p p s s HR Flower10 ] TF TF TF
+				
+				
+			]
+			
+			p p p F P P P
+			[ s s s s
+			
+				[ p p p S S WedgeLeaf ] TF TF TF
+				[ p p p S S S Square1 ] TF TF TF
+				[ p p p S S S S S S Face ] TF TF TF
+				[ p p p S S S Arrow ] TF TF TF
+				[ p p p S Prism ] TF TF TF
+				[ p p p S Prism1 ] TF TF TF
+				[ p p p s s Circle ] TF TF TF
+				
+				
+					
+				
+				
+			
+				
+			]
+			
+			`), movMatrix, true)
+			/*
+				[ p p p s s FlowerField ] TF TF TF
+				[ p p p s  s s Plant ] TF TF TF
+					[ p p p s s s s s Koch2 ] TF TF TF
+					[ p p p S S KIomega ] TF TF TF
+						[ s s s s s s s  Koch3 ] TF TF TF
+							[ p p p r r r s s s s s Tree3 ] TF TF TF
+							[ P P P s s s s s 3DTree3 ] TF TF TF
+							[ p p p r r r s s s 3DTreeLeafy ]
 
-			indicesNative := make([]uint16, len(verticesNative))
+							[ p p p s s leaf2 ] TF TF TF
+								   [ p p p s s s r Gosper ] TF TF TF
+								   				[ p p p s s s r Sierpinksi ] TF TF TF
+												[ p p p s s s  risingVine ] TF TF TF
+			*/
+			indicesNative := make([]uint16, len(verticesNative)/3)
 			for i, _ := range indicesNative {
 				indicesNative[i] = uint16(i)
 			}
-			var colors = gltypes.SliceToTypedArray(colorsNative)
-			var vertices = gltypes.SliceToTypedArray(verticesNative)
-			var indices = gltypes.SliceToTypedArray(indicesNative)
+			colors := gltypes.SliceToTypedArray(colorsNative)
+			vertices := gltypes.SliceToTypedArray(verticesNative)
+			indices := gltypes.SliceToTypedArray(indicesNative)
 			// Create vertex buffer
 
 			gl.Call("bindBuffer", glTypes.ArrayBuffer, vertexBuffer)
@@ -265,6 +316,7 @@ func main() {
 
 			gl.Call("bindBuffer", glTypes.ElementArrayBuffer, indexBuffer)
 			gl.Call("bufferData", glTypes.ElementArrayBuffer, indices, glTypes.StaticDraw)
+
 			gl.Call("drawElements", glTypes.Triangles, len(indicesNative), glTypes.UnsignedShort, 0)
 		}
 

@@ -191,7 +191,7 @@ func ruleBook() map[string]map[string][]string {
 		},
 		"Arrow": map[string][]string{
 			"chunk": strings.Split("Colour255,0,0 A1.5707 [ [ F op [ F Colour0,255,0 op ] ] Y [ Colour0,0,255 F  op ] ]", " "),
-			"Arrow": strings.Split("s s s s chunk R chunk R chunk R chunk", " "),
+			"Arrow": strings.Split("[ s s  chunk R chunk R chunk R chunk ]", " "),
 		},
 		"Tetrahedron": map[string][]string{
 			"c1": s("[ F P F Y F . ]"),
@@ -237,40 +237,40 @@ func ruleBook() map[string]map[string][]string {
 		},
 		"Icosahedron": map[string][]string{
 			"patch1": s(`
-                        [ F F Y F . ] [ P F F p F . ] [ Y F F P F . ] reverseTriangle
-                        [ F F y F . ] [ P F F p F . ] [ y F F P F . ]
+	                        [ F F Y F . ] [ P F F p F . ] [ Y F F P F . ] reverseTriangle
+	                        [ F F y F . ] [ P F F p F . ] [ y F F P F . ]
                     `),
 			"ring": s(`
-                Colour255,0,0 [ F [ F [ Y F . ] [ y F . ] ] [ P F F . ] ] reverseTriangle
-                Colour0,255,0 [ F [ F [ Y F . ] [ y F . ] ] [ p F F . ] ]
-                Y Y
-                Colour0,0,255 [ F [ F [ Y F . ] [ y F . ] ] [ P F F . ] ] reverseTriangle
-                Colour255,0,255 [ F [ F [ Y F . ] [ y F . ] ] [ p F F . ] ]
-`),
+		                Colour255,0,0 [ F [ F [ Y F . ] [ y F . ] ] [ P F F . ] ] reverseTriangle
+		                Colour0,255,0 [ F [ F [ Y F . ] [ y F . ] ] [ p F F . ] ]
+		                Y Y
+		                Colour0,0,255 [ F [ F [ Y F . ] [ y F . ] ] [ P F F . ] ] reverseTriangle
+		                Colour255,0,255 [ F [ F [ Y F . ] [ y F . ] ] [ p F F . ] ]
+				`),
 			"Icosahedron": s(`A1.5707
-                    [ Y Y p R R p
-                    Colour255,255,255
-                    patch1
-                ]
-                [ ring ]
-                [
-                    Y P
-                    ring
-                ]
-                [
-                    Y R
-                    ring
-                ]
-                [
-                    Colour255,255,0
-                    patch1
-                    R R
-                    Colour255,0,255
-                    patch1
-                    P P
-                    Colour0,255,255
-                    patch1
-                ]
+					                    [ Y Y p R R p
+					                    Colour255,255,255
+					                    patch1
+					                ]
+					                [ ring ]
+					                [
+					                    Y P
+					                    ring
+					                ]
+					                [
+					                    Y R
+					                    ring
+					                ]
+					                [
+					                    Colour255,255,0
+					                    patch1
+					                    R R
+					                    Colour255,0,255
+					                    patch1
+					                    P P
+					                    Colour0,255,255
+					                    patch1
+					                ]
                 `),
 		},
 	}

@@ -94,13 +94,14 @@ func quad() []float32 {
 	return triangleData
 }
 func checkGlErr() {}
-func Draw(CurrentScene *Scene, camera mgl32.Mat4, start []string, trans mgl32.Mat4, buildMode bool, mirrorOpt bool, ModelMatrix js.Value, gl js.Value) ([]float32, []float32) {
 
-	var setAngleRegex = regexp.MustCompile(`A([0-9.]+)`)
-	var setDegreeRegex = regexp.MustCompile(`deg([0-9.]+)`)
-	var setHingeRegex = regexp.MustCompile(`Hinge\(([0-9]+)\)`)
-	var setColourRegex = regexp.MustCompile(`Colour(\d\d?\d?),(\d\d?\d?),(\d\d?\d?)`)
-	var setScaleRegex = regexp.MustCompile(`Scale\((-?[0-9.]+),(-?[0-9.]+),(-?[0-9.]+)\)`)
+var setAngleRegex = regexp.MustCompile(`A([0-9.]+)`)
+var setDegreeRegex = regexp.MustCompile(`deg([0-9.]+)`)
+var setHingeRegex = regexp.MustCompile(`Hinge\(([0-9]+)\)`)
+var setColourRegex = regexp.MustCompile(`Colour(\d\d?\d?),(\d\d?\d?),(\d\d?\d?)`)
+var setScaleRegex = regexp.MustCompile(`Scale\((-?[0-9.]+),(-?[0-9.]+),(-?[0-9.]+)\)`)
+
+func Draw(CurrentScene *Scene, camera mgl32.Mat4, start []string, trans mgl32.Mat4, buildMode bool) ([]float32, []float32) {
 
 	//fmt.Printf("Start: %v\n", start)
 	triBuf := []float32{}
@@ -115,7 +116,7 @@ func Draw(CurrentScene *Scene, camera mgl32.Mat4, start []string, trans mgl32.Ma
 
 	forward := []float32{0, 1.0, 0, 0}
 	//PI := float32(3.1415927)
-	a := attribs{angle: float32(0.2), red: 1.0, blue: 1.0, green: 1.0, alpha: 1.0, mirror: mirrorOpt}
+	a := attribs{angle: float32(0.2), red: 1.0, blue: 1.0, green: 1.0, alpha: 1.0, mirror: false}
 	stateStack := []mgl32.Mat4{}
 	//fmt.Printf("Commands: %v\n", commands)
 
@@ -233,17 +234,17 @@ func Draw(CurrentScene *Scene, camera mgl32.Mat4, start []string, trans mgl32.Ma
 				colBuf = append(colBuf, a.red, a.green, a.blue, a.alpha)
 			}
 		case c == "Q":
-			//if !buildMode {
-			//glctx.Uniform4f(color, a.red, a.green, a.blue, 1)
-			log.Printf("Pushing quad vertices\n")
-			triBuf = append(triBuf, quad()...)
-			colBuf = append(colBuf, a.red, a.green, a.blue, a.alpha)
-			colBuf = append(colBuf, a.red, a.green, a.blue, a.alpha)
-			colBuf = append(colBuf, a.red, a.green, a.blue, a.alpha)
-			colBuf = append(colBuf, a.red, a.green, a.blue, a.alpha)
-			colBuf = append(colBuf, a.red, a.green, a.blue, a.alpha)
-			colBuf = append(colBuf, a.red, a.green, a.blue, a.alpha)
-			//}
+			if buildMode {
+				//glctx.Uniform4f(color, a.red, a.green, a.blue, 1)
+				log.Printf("Pushing quad vertices\n")
+				triBuf = append(triBuf, quad()...)
+				colBuf = append(colBuf, a.red, a.green, a.blue, a.alpha)
+				colBuf = append(colBuf, a.red, a.green, a.blue, a.alpha)
+				colBuf = append(colBuf, a.red, a.green, a.blue, a.alpha)
+				colBuf = append(colBuf, a.red, a.green, a.blue, a.alpha)
+				colBuf = append(colBuf, a.red, a.green, a.blue, a.alpha)
+				colBuf = append(colBuf, a.red, a.green, a.blue, a.alpha)
+			}
 		case c == "TF":
 			if buildMode {
 				triBuf = append(triBuf, tr(trans)...)
