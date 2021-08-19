@@ -246,12 +246,12 @@ func main() {
 			verticesNative, colorsNative := lsystem.Draw(CurrentScene, camera.ViewMatrix(), lsystem.S(`
 			Colour254,254,254 deg30 r r F p p p f f f f [
 				s s s s
-				[ s s Icosahedron ] TF TF TF TF 
-				Tetrahedron  Arrow  F  Arrow  F  Arrow  F  
-				[ p p p s s s starburst ] Arrow  F  Arrow  F  Arrow  F 
-				[ p p p s s leaf ] Arrow  F  Arrow  F  Arrow  F 	
-				[ P P P  S S Square ] Arrow  F  Arrow  F  Arrow  F 
-				[ p p p s s s lineStar ] TF TF TF
+				[ s s HR Icosahedron ] TF TF TF TF 
+				[ HR Tetrahedron ] Arrow  F  Arrow  F  Arrow  F  
+				[ p p p s s s HR starburst ] Arrow  F  Arrow  F  Arrow  F 
+				[ p p p s s HR leaf ] Arrow  F  Arrow  F  Arrow  F 	
+				
+				[ p p p s s s HR lineStar ] TF TF TF
 				[ p p p s s HR Flower ] TF TF TF
 				[ p p p s s HR Flower12 ] TF TF TF
 				[ p p p s s HR Flower11 ] TF TF TF
@@ -263,13 +263,13 @@ func main() {
 			p p p F P P P
 			[ s s s s
 			
-				[ p p p S S WedgeLeaf ] TF TF TF
-				[ p p p S S S Square1 ] TF TF TF
-				[ p p p S S S S S S Face ] TF TF TF
-				[ p p p S S S Arrow ] TF TF TF
-				[ p p p S Prism ] TF TF TF
-				[ p p p S Prism1 ] TF TF TF
-				[ p p p s s Circle ] TF TF TF
+				
+				[ p p p S S S HR Square1 ] TF TF TF
+				[ p p p S S S S S S HR Face ] TF TF TF
+				[ p p p S S S HR Arrow ] TF TF TF
+				[ p p p S HR Prism ] TF TF TF
+				[ p p p S HR Prism1 ] TF TF TF
+				[   s s HR p p p Circle ] TF TF TF
 				
 				
 					

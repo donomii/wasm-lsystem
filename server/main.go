@@ -37,6 +37,6 @@ func main() {
 		w.WriteHeader(http.StatusOK)
 		w.Write(wasmData)
 	})
-
+	log.Printf("Server started on :8081\n")
 	log.Fatal(http.ListenAndServe(":8081", nil))
 }

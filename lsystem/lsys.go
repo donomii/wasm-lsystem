@@ -140,7 +140,7 @@ func ruleBook() map[string]map[string][]string {
 			"TF":    strings.Split("TF Y TF y TF y TF Y TF T F", " "),
 		},
 		"Square": map[string][]string{
-			"Square": strings.Split("Colour0,0,255 A1.57 TF y y TF", " "),
+			"Square": strings.Split("Square1", " "),
 		},
 		"Plant": map[string][]string{
 			"Plant":     strings.Split("A0.314159 Colour139,69,19 Plant1", " "),
