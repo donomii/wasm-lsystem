@@ -38,12 +38,12 @@ type State struct {
 	Cbo            uint32
 	Texture        uint32
 	TextureUniform int32
-	VertAttrib     uint32
-	ColourAttrib   uint32
+	VertAttrib     int32
+	ColourAttrib   int32
 	Angle          float64
 	PreviousTime   float64
 	ModelUniform   int32
-	TexCoordAttrib uint32
+	TexCoordAttrib int32
 }
 
 var winWidth = 180
@@ -115,50 +115,9 @@ func main() {
 	//Activate the program we just created.  This means we will use the render and fragment shaders we compiled above
 	gl.UseProgram(state.Program)
 
-	//Find the location of the texture, so we can upload a picture to it
-	state.TextureUniform = gl.GetUniformLocation(state.Program, gl.Str("tex\x00"))
-	gl.Uniform1i(state.TextureUniform, 0)
-
-	//This is the variable in the fragment shader that will hold the colour for each pixel
+	state.Vao, state.Vbo, state.VertAttrib = make_array_buffer("vert", 3, state.Program, gl.FLOAT)
+	state.Cao, state.Cbo, state.ColourAttrib = make_array_buffer("s_col", 4, state.Program, gl.FLOAT)
 	gl.BindFragDataLocation(state.Program, 0, gl.Str("outputColor\x00"))
-
-	// Configure the colour data
-	gl.GenVertexArrays(1, &state.Cao)
-	gl.BindVertexArray(state.Cao)
-
-	gl.GenBuffers(1, &state.Cbo)
-	gl.BindBuffer(gl.ARRAY_BUFFER, state.Cbo)
-	state.ColourAttrib = uint32(gl.GetAttribLocation(state.Program, gl.Str("s_col\x00")))
-	checkGlError()
-	fmt.Printf("Got attribute %v\n", state.ColourAttrib)
-
-	gl.VertexAttribPointer(state.ColourAttrib, 4, gl.FLOAT, false, 0, gl.PtrOffset(0))
-	gl.EnableVertexAttribArray(state.ColourAttrib)
-	checkGlError()
-
-	// Configure the vertex data
-	gl.GenVertexArrays(1, &state.Vao)
-	gl.BindVertexArray(state.Vao)
-
-	gl.GenBuffers(1, &state.Vbo)
-	checkGlError()
-	gl.BindBuffer(gl.ARRAY_BUFFER, state.Vbo)
-	checkGlError()
-	state.VertAttrib = uint32(gl.GetAttribLocation(state.Program, gl.Str("vert\x00")))
-	checkGlError()
-	fmt.Printf("Got attribute %v\n", state.VertAttrib)
-
-	gl.VertexAttribPointer(state.VertAttrib, 3, gl.FLOAT, false, 0, gl.PtrOffset(0))
-	checkGlError()
-	gl.EnableVertexAttribArray(state.VertAttrib)
-	checkGlError()
-
-	// Configure global settings
-	gl.Enable(gl.DEPTH_TEST)
-	gl.DepthFunc(gl.LESS)
-	gl.UseProgram(state.Program)
-	gl.ClearColor(1.0, 1.0, 1.0, 0.0)
-
 	resetCam(scene_camera)
 	sceneList := lsystem.InitScenes(scene_camera)
 	CurrentScene = sceneList[0]
@@ -182,12 +141,15 @@ func gfxMain(win *glfw.Window, state *State) {
 	now := glfw.GetTime()
 	elapsed := now - state.PreviousTime
 
-	gl.Enable(gl.BLEND)
-	//gl.Viewport(0, 0, screenWidth, screenHeight)
-	gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
-	gl.Enable(gl.DEPTH_TEST)
-	gl.DepthFunc(gl.LEQUAL)
-	gl.DepthMask(true)
+	// Configure global settings
+	gl.Disable(gl.DEPTH_TEST)
+	gl.UseProgram(state.Program)
+	gl.ClearColor(0.5, 0.5, 0.5, 1.0)
+
+	gl.Disable(gl.BLEND)
+	gl.Disable(gl.DEPTH_TEST)
+
+	gl.PolygonMode(gl.FRONT_AND_BACK, gl.FILL)
 
 	if elapsed > 0.050 && 1 != win.GetAttrib(glfw.Iconified) {
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
@@ -197,40 +159,31 @@ func gfxMain(win *glfw.Window, state *State) {
 
 		vertices, colours := calcLsys()
 
-		//fmt.Printf("array: %v\n", colours)
+		fmt.Printf("array len: %v\n", len(colours))
+
+		gl.BindVertexArray(state.Vao)
+		checkGlError()
+		gl.BindBuffer(gl.ARRAY_BUFFER, state.Vbo)
+		checkGlError()
+		gl.BufferData(gl.ARRAY_BUFFER, len(vertices)*4, gl.Ptr(vertices), gl.DYNAMIC_DRAW)
+		checkGlError()
 
 		gl.BindVertexArray(state.Cao)
 		checkGlError()
 		gl.BindBuffer(gl.ARRAY_BUFFER, state.Cbo)
 		checkGlError()
-
-		//gl.VertexAttribPointer(state.ColourAttrib, 4, gl.FLOAT, false, 0, gl.PtrOffset(0))
 		gl.BufferData(gl.ARRAY_BUFFER, len(colours)*4, gl.Ptr(colours), gl.DYNAMIC_DRAW)
+		checkGlError()
+		gl.VertexAttribPointer(uint32(state.ColourAttrib), 4, gl.FLOAT, false, 0, gl.PtrOffset(0))
+		checkGlError()
 
-		//gl.EnableVertexAttribArray(state.VertAttrib)
 		gl.BindVertexArray(state.Vao)
-		gl.BindBuffer(gl.ARRAY_BUFFER, state.Vbo)
-
-		//gl.VertexAttribPointer(state.VertAttrib, 4, gl.FLOAT, false, 0, gl.PtrOffset(0))
-		gl.BufferData(gl.ARRAY_BUFFER, len(vertices)*4, gl.Ptr(vertices), gl.DYNAMIC_DRAW)
-
-		gl.DrawArrays(gl.TRIANGLES, 0, int32(len(vertices)))
+		gl.DrawArrays(gl.TRIANGLES, 0, int32(len(vertices)/3))
 
 		win.SwapBuffers()
 
 	}
 	time.Sleep(10 * time.Millisecond)
-}
-
-func checkGlError() {
-
-	err := gl.GetError()
-	if err > 0 {
-		errStr := fmt.Sprintf("GLerror: %v\n", err)
-		fmt.Printf(errStr)
-		panic(errStr)
-	}
-
 }
 
 func Move(movMatrix mgl32.Mat4, x, y, z float32) mgl32.Mat4 {

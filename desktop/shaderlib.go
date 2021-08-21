@@ -6,27 +6,46 @@ import (
 	"image"
 	"image/draw"
 	_ "image/png"
+	"log"
 	"strings"
 
 	"github.com/go-gl/gl/v3.2-core/gl"
 )
 
+func checkGlError() {
+
+	err := gl.GetError()
+	if err > 0 {
+		errStr := fmt.Sprintf("GLerror: %v\n", err)
+		fmt.Printf(errStr)
+		panic(errStr)
+	}
+
+}
+
 func newProgram(vertexShaderSource, fragmentShaderSource string) (uint32, error) {
 	vertexShader, err := compileShader(vertexShaderSource, gl.VERTEX_SHADER)
 	if err != nil {
+		log.Println(err)
 		return 0, err
 	}
 
 	fragmentShader, err := compileShader(fragmentShaderSource, gl.FRAGMENT_SHADER)
 	if err != nil {
+		log.Println(err)
 		return 0, err
 	}
 
 	program := gl.CreateProgram()
+	//This is the variable in the fragment shader that will hold the colour for each pixel
 
+	checkGlError()
 	gl.AttachShader(program, vertexShader)
+	checkGlError()
 	gl.AttachShader(program, fragmentShader)
+	checkGlError()
 	gl.LinkProgram(program)
+	checkGlError()
 
 	var status int32
 	gl.GetProgramiv(program, gl.LINK_STATUS, &status)
@@ -41,7 +60,9 @@ func newProgram(vertexShaderSource, fragmentShaderSource string) (uint32, error)
 	}
 
 	gl.DeleteShader(vertexShader)
+	checkGlError()
 	gl.DeleteShader(fragmentShader)
+	checkGlError()
 
 	return program, nil
 }
@@ -120,14 +141,15 @@ func emptyTexture() (uint32, error) {
 
 var vertexShader = `
 #version 330
-in vec4 s_col;
-in vec3 vert;
+layout(location = 1) in vec4 s_col;
+layout(location = 2) in vec3 vert;
 
 out  vec4 fragCol;
 
 void main() {
     gl_Position = vec4(vert, 1);
 	fragCol = s_col;
+	fragCol.a=1.0;
 	//fragCol =  vec4(1.0,0.0,0.0,1.0)+s_col;
 }
 ` + "\x00"
@@ -135,13 +157,36 @@ void main() {
 var fragmentShader = `
 #version 330
 in vec4 fragCol;
-out  vec4 outputColor;
+layout(location = 0) out  vec4 outputColor;
 void main() {
-	outputColor = fragCol+vec4(0.5);
-	//outputColor = vec4(1.0,0.0,0.0,1.0);
-
+	outputColor = fragCol;
 }
 ` + "\x00"
+
+func make_array_buffer(name string, components int32, program uint32, tpe uint32) (uint32, uint32, int32) {
+	var Vao, Vbo uint32
+	var attrib int32
+
+	gl.GenVertexArrays(1, &Vao)
+	gl.BindVertexArray(Vao)
+
+	gl.GenBuffers(1, &Vbo)
+	checkGlError()
+	gl.BindBuffer(gl.ARRAY_BUFFER, Vbo)
+	checkGlError()
+	attrib = int32(gl.GetAttribLocation(program, gl.Str(name+"\x00")))
+	if attrib < 0 {
+		log.Printf("Could not find attribute %v, any operations on this attribute will fail\n", name)
+	}
+	checkGlError()
+	fmt.Printf("Got attribute %v\n", attrib)
+
+	gl.VertexAttribPointer(uint32(attrib), components, tpe, false, 0, gl.PtrOffset(0))
+	checkGlError()
+	gl.EnableVertexAttribArray(uint32(attrib))
+	checkGlError()
+	return Vao, Vbo, attrib
+}
 
 var cubeVertices = []float32{
 	//  X, Y, Z, U, V
