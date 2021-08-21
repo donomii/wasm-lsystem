@@ -115,21 +115,6 @@ func main() {
 	//Activate the program we just created.  This means we will use the render and fragment shaders we compiled above
 	gl.UseProgram(state.Program)
 
-	//Set a default projection matrix
-	projection := mgl32.Perspective(mgl32.DegToRad(45.0), float32(winWidth)/float32(winHeight), 0.1, 10.0)
-	projectionUniform := gl.GetUniformLocation(state.Program, gl.Str("projection\x00"))
-	gl.UniformMatrix4fv(projectionUniform, 1, false, &projection[0])
-
-	//Setup the camera
-	camera := mgl32.LookAtV(mgl32.Vec3{3, 3, 3}, mgl32.Vec3{0, 0, 0}, mgl32.Vec3{0, 1, 0})
-	cameraUniform := gl.GetUniformLocation(state.Program, gl.Str("camera\x00"))
-	gl.UniformMatrix4fv(cameraUniform, 1, false, &camera[0])
-
-	//Setup the cube
-	model := mgl32.Ident4()
-	state.ModelUniform = gl.GetUniformLocation(state.Program, gl.Str("model\x00"))
-	gl.UniformMatrix4fv(state.ModelUniform, 1, false, &model[0])
-
 	//Find the location of the texture, so we can upload a picture to it
 	state.TextureUniform = gl.GetUniformLocation(state.Program, gl.Str("tex\x00"))
 	gl.Uniform1i(state.TextureUniform, 0)
@@ -137,42 +122,42 @@ func main() {
 	//This is the variable in the fragment shader that will hold the colour for each pixel
 	gl.BindFragDataLocation(state.Program, 0, gl.Str("outputColor\x00"))
 
-	// Configure the vertex data
-	gl.GenVertexArrays(1, &state.Vao)
-	gl.BindVertexArray(state.Vao)
-
-	gl.GenBuffers(1, &state.Vbo)
-	gl.BindBuffer(gl.ARRAY_BUFFER, state.Vbo)
-	gl.BufferData(gl.ARRAY_BUFFER, len(cubeVertices)*4, gl.Ptr(cubeVertices), gl.STATIC_DRAW)
-	checkGlError()
-	state.VertAttrib = uint32(gl.GetAttribLocation(state.Program, gl.Str("vert\x00")))
-	gl.EnableVertexAttribArray(state.VertAttrib)
-	gl.VertexAttribPointer(state.VertAttrib, 3, gl.FLOAT, false, 0, gl.PtrOffset(0))
-	checkGlError()
-
+	// Configure the colour data
 	gl.GenVertexArrays(1, &state.Cao)
 	gl.BindVertexArray(state.Cao)
 
 	gl.GenBuffers(1, &state.Cbo)
 	gl.BindBuffer(gl.ARRAY_BUFFER, state.Cbo)
 	state.ColourAttrib = uint32(gl.GetAttribLocation(state.Program, gl.Str("s_col\x00")))
+	checkGlError()
+	fmt.Printf("Got attribute %v\n", state.ColourAttrib)
+
+	gl.VertexAttribPointer(state.ColourAttrib, 4, gl.FLOAT, false, 0, gl.PtrOffset(0))
+	gl.EnableVertexAttribArray(state.ColourAttrib)
+	checkGlError()
+
+	// Configure the vertex data
+	gl.GenVertexArrays(1, &state.Vao)
+	gl.BindVertexArray(state.Vao)
+
+	gl.GenBuffers(1, &state.Vbo)
+	checkGlError()
+	gl.BindBuffer(gl.ARRAY_BUFFER, state.Vbo)
+	checkGlError()
+	state.VertAttrib = uint32(gl.GetAttribLocation(state.Program, gl.Str("vert\x00")))
+	checkGlError()
+	fmt.Printf("Got attribute %v\n", state.VertAttrib)
+
+	gl.VertexAttribPointer(state.VertAttrib, 3, gl.FLOAT, false, 0, gl.PtrOffset(0))
+	checkGlError()
 	gl.EnableVertexAttribArray(state.VertAttrib)
-	gl.VertexAttribPointer(state.VertAttrib, 4, gl.FLOAT, false, 0, gl.PtrOffset(0))
 	checkGlError()
 
 	// Configure global settings
 	gl.Enable(gl.DEPTH_TEST)
 	gl.DepthFunc(gl.LESS)
-	gl.ClearColor(1.0, 1.0, 1.0, 1.0)
 	gl.UseProgram(state.Program)
 	gl.ClearColor(1.0, 1.0, 1.0, 0.0)
-
-	//Activate the cube data, which will be drawn
-	gl.BindVertexArray(state.Vao)
-
-	//Choose the texture we just created and uploaded
-	gl.ActiveTexture(gl.TEXTURE0)
-	gl.BindTexture(gl.TEXTURE_2D, state.Texture)
 
 	resetCam(scene_camera)
 	sceneList := lsystem.InitScenes(scene_camera)
@@ -193,38 +178,41 @@ func shutdown() {
 }
 
 func gfxMain(win *glfw.Window, state *State) {
-	//fmt.Println("Draw")
-	//width, height := win.GetSize()
-	//gl.Viewport(0, 0, int32(width-1), int32(height-1))
-
-	// Render
-
-	// Update
 
 	now := glfw.GetTime()
 	elapsed := now - state.PreviousTime
 
-	if elapsed > 0.050 && 1 != win.GetAttrib(glfw.Iconified) {
+	gl.Enable(gl.BLEND)
+	//gl.Viewport(0, 0, screenWidth, screenHeight)
+	gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
+	gl.Enable(gl.DEPTH_TEST)
+	gl.DepthFunc(gl.LEQUAL)
+	gl.DepthMask(true)
 
+	if elapsed > 0.050 && 1 != win.GetAttrib(glfw.Iconified) {
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-		//fmt.Printf("elapsed: %v\n", elapsed)
-		state.PreviousTime = now
 		angle := state.Angle
 		angle += elapsed
 		state.Angle = angle
 
-		//model := mgl32.HomogRotate3D(float32(angle+rotX), mgl32.Vec3{0, 1, 0})
-
-		// Render
-
 		vertices, colours := calcLsys()
-		fmt.Printf("array: %v\n", colours)
 
-		gl.BindBuffer(gl.ARRAY_BUFFER, state.ColourAttrib)
-		gl.BufferData(gl.ARRAY_BUFFER, len(colours)*4, gl.Ptr(colours), gl.STATIC_DRAW)
-		//gl.UniformMatrix4fv(state.ModelUniform, 1, false, &vertices[0])
-		gl.BindBuffer(gl.ARRAY_BUFFER, state.VertAttrib)
-		gl.BufferData(gl.ARRAY_BUFFER, len(vertices)*4, gl.Ptr(vertices), gl.STATIC_DRAW)
+		//fmt.Printf("array: %v\n", colours)
+
+		gl.BindVertexArray(state.Cao)
+		checkGlError()
+		gl.BindBuffer(gl.ARRAY_BUFFER, state.Cbo)
+		checkGlError()
+
+		//gl.VertexAttribPointer(state.ColourAttrib, 4, gl.FLOAT, false, 0, gl.PtrOffset(0))
+		gl.BufferData(gl.ARRAY_BUFFER, len(colours)*4, gl.Ptr(colours), gl.DYNAMIC_DRAW)
+
+		//gl.EnableVertexAttribArray(state.VertAttrib)
+		gl.BindVertexArray(state.Vao)
+		gl.BindBuffer(gl.ARRAY_BUFFER, state.Vbo)
+
+		//gl.VertexAttribPointer(state.VertAttrib, 4, gl.FLOAT, false, 0, gl.PtrOffset(0))
+		gl.BufferData(gl.ARRAY_BUFFER, len(vertices)*4, gl.Ptr(vertices), gl.DYNAMIC_DRAW)
 
 		gl.DrawArrays(gl.TRIANGLES, 0, int32(len(vertices)))
 

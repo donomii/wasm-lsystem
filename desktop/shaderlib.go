@@ -120,25 +120,25 @@ func emptyTexture() (uint32, error) {
 
 var vertexShader = `
 #version 330
-uniform mat4 projection;
-uniform mat4 camera;
-uniform mat4 model;
-in vec3 vert;
 in vec4 s_col;
-out vec4 fragCol;
+in vec3 vert;
+
+out  vec4 fragCol;
+
 void main() {
     gl_Position = vec4(vert, 1);
 	fragCol = s_col;
+	//fragCol =  vec4(1.0,0.0,0.0,1.0)+s_col;
 }
 ` + "\x00"
 
 var fragmentShader = `
 #version 330
 in vec4 fragCol;
-out vec4 outputColor;
+out  vec4 outputColor;
 void main() {
-	//outputColor = fragCol;
-	outputColor = vec4(1.0,0.0,0.0,1.0);
+	outputColor = fragCol+vec4(0.5);
+	//outputColor = vec4(1.0,0.0,0.0,1.0);
 
 }
 ` + "\x00"
