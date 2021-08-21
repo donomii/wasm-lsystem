@@ -3,7 +3,7 @@ package lsystem
 import (
 	"time"
 
-	"github.com/donomii/wasm-rotating-cube/tween"
+	"../tween"
 )
 
 //Init global data for the snek display

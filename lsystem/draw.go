@@ -7,10 +7,7 @@ import (
 	"os"
 	"regexp"
 	"strconv"
-	"syscall/js"
-	"unsafe"
 
-	"github.com/bobcob7/wasm-rotating-cube/gltypes"
 	"github.com/go-gl/mathgl/mgl32"
 )
 
@@ -260,7 +257,7 @@ func Draw(CurrentScene *Scene, camera mgl32.Mat4, start []string, trans mgl32.Ma
 		default:
 			//log.Println("'", c, "'")
 
-			log.Println("Paint: ", c)
+			//log.Println("Paint: ", c)
 			//paintCube(camera, trans, c, a, ModelMatrix, gl, indicesNative)
 
 		}
@@ -268,6 +265,7 @@ func Draw(CurrentScene *Scene, camera mgl32.Mat4, start []string, trans mgl32.Ma
 	return triBuf, colBuf
 }
 
+/*
 func paintCube(camera mgl32.Mat4, trans mgl32.Mat4, name string, a attribs, ModelMatrix js.Value, gl js.Value, indicesNative []uint16) {
 	var glTypes gltypes.GLTypes
 	glTypes.New(gl)
@@ -294,7 +292,7 @@ func paintCube(camera mgl32.Mat4, trans mgl32.Mat4, name string, a attribs, Mode
 	checkGlErr()
 
 }
-
+*/
 /*
 func paintVertices(camera mgl32.Mat4, trans mgl32.Mat4, name string, a attribs, ModelMatrix js.Value, gl js.Value) {
 	var glTypes gltypes.GLTypes

@@ -6,7 +6,7 @@ import (
 
 	"github.com/donomii/sceneCamera"
 
-	"github.com/donomii/wasm-rotating-cube/lsystem"
+	"./lsystem"
 
 	"github.com/bobcob7/wasm-rotating-cube/gltypes"
 	"github.com/go-gl/mathgl/mgl32"

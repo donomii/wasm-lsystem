@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/donomii/sceneCamera"
-	"github.com/donomii/wasm-rotating-cube/tween"
+	"../tween"
 )
 
 type Scene struct {

@@ -2,8 +2,8 @@ GOROOT := $(shell go env GOROOT)
 
 all: wasm-rotating-cube
 
-wasm-rotating-cube: output.wasm main.go
-	go build -o wasm-rotating-cube main.go
+wasm-rotating-cube: output.wasm server/main.go
+	go build -o wasm-rotating-cube server/main.go
 
 output.wasm: bundle.go wasm_exec.js
 	GOOS=js GOARCH=wasm go build -o bundle.wasm bundle.go
