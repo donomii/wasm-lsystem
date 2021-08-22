@@ -183,8 +183,7 @@ func make_array_buffer(name string, components int32, program uint32, tpe uint32
 
 	gl.VertexAttribPointer(uint32(attrib), components, tpe, false, 0, gl.PtrOffset(0))
 	checkGlError()
-	gl.EnableVertexAttribArray(uint32(attrib))
-	checkGlError()
+
 	return Vao, Vbo, attrib
 }
 

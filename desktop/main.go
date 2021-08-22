@@ -69,8 +69,8 @@ func main() {
 	if err := glfw.Init(); err != nil {
 		panic(err)
 	}
-	glfw.WindowHint(glfw.ContextVersionMajor, 4)
-	glfw.WindowHint(glfw.ContextVersionMinor, 1)
+	glfw.WindowHint(glfw.ContextVersionMajor, 3)
+	glfw.WindowHint(glfw.ContextVersionMinor, 2)
 	glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile)
 	glfw.WindowHint(glfw.OpenGLForwardCompatible, glfw.True)
 	win, err := glfw.CreateWindow(winWidth, winHeight, "Grafana", nil, nil)
@@ -167,18 +167,24 @@ func gfxMain(win *glfw.Window, state *State) {
 		checkGlError()
 		gl.BufferData(gl.ARRAY_BUFFER, len(vertices)*4, gl.Ptr(vertices), gl.DYNAMIC_DRAW)
 		checkGlError()
-
-		gl.BindVertexArray(state.Cao)
+		gl.VertexAttribPointer(uint32(state.VertAttrib), 3, gl.FLOAT, false, 0, gl.PtrOffset(0))
 		checkGlError()
+		gl.EnableVertexAttribArray(uint32(state.VertAttrib))
+		checkGlError()
+
 		gl.BindBuffer(gl.ARRAY_BUFFER, state.Cbo)
 		checkGlError()
 		gl.BufferData(gl.ARRAY_BUFFER, len(colours)*4, gl.Ptr(colours), gl.DYNAMIC_DRAW)
 		checkGlError()
 		gl.VertexAttribPointer(uint32(state.ColourAttrib), 4, gl.FLOAT, false, 0, gl.PtrOffset(0))
 		checkGlError()
+		gl.EnableVertexAttribArray(uint32(state.ColourAttrib))
+		checkGlError()
 
 		gl.BindVertexArray(state.Vao)
+		checkGlError()
 		gl.DrawArrays(gl.TRIANGLES, 0, int32(len(vertices)/3))
+		checkGlError()
 
 		win.SwapBuffers()
 
