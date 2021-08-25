@@ -7,6 +7,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"math/rand"
 	"os"
 	"runtime"
 	"runtime/debug"
@@ -73,7 +74,7 @@ func main() {
 	glfw.WindowHint(glfw.ContextVersionMinor, 2)
 	glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile)
 	glfw.WindowHint(glfw.OpenGLForwardCompatible, glfw.True)
-	win, err := glfw.CreateWindow(winWidth, winHeight, "Grafana", nil, nil)
+	win, err := glfw.CreateWindow(winWidth, winHeight, "Lsystems", nil, nil)
 	if err != nil {
 		panic(err)
 	}
@@ -91,9 +92,9 @@ func main() {
 		//handleKey(w, key, scancode, action, mods)
 	})
 
-	//win.SetMouseButtonCallback(handleMouseButton)
+	win.SetMouseButtonCallback(handleMouseButton)
 
-	//win.SetCursorPosCallback(handleMouseMove)
+	win.SetCursorPosCallback(handleMouseMove)
 
 	if err := gl.Init(); err != nil {
 		panic(err)
@@ -159,7 +160,7 @@ func gfxMain(win *glfw.Window, state *State) {
 
 		vertices, colours := calcLsys()
 
-		fmt.Printf("array len: %v\n", len(colours))
+		//fmt.Printf("array len: %v\n", len(colours))
 
 		gl.BindVertexArray(state.Vao)
 		checkGlError()
@@ -202,6 +203,15 @@ func resetCam(camera *sceneCamera.SceneCamera) {
 	camera.Translate(0.0, 0.0, 0.0)
 	camera.LookAt(0.0, 0.0, 0.0)
 }
+
+type immob struct {
+	Location []float32
+	Lsys     string
+}
+
+var sceneList []immob
+var scale float32 = 1
+
 func calcLsys() ([]float32, []float32) {
 
 	movMatrix := mgl32.Ident4()
@@ -245,5 +255,58 @@ func calcLsys() ([]float32, []float32) {
 			
 			`), movMatrix, true)
 
+	scale = 10.0 //scale + 1.0
+	//fmt.Printf("scale: %v\n", scale)
+
+	/*
+		objs := []string{
+			" HR s s s s s s s s leaf ",
+			" HR s s s s s Arrow ",
+			" HR s s s s s s s s Flower ",
+			" HR s s s s s s s s Circle ",
+			" HR s s s s s s s s Icosahedron ",
+		}
+
+			sceneList = []immob{}
+			for i := 0; i < 5; i++ {
+				imm := immob{[]float32{float32(i) / scale, float32(i) / scale, float32(i) / scale}, objs[i]}
+				sceneList = append(sceneList, imm)
+
+			}
+	*/
+
+	for _, imm := range sceneList {
+		movMatrix := mgl32.Ident4()
+		movMatrix = Move(movMatrix, imm.Location[0], imm.Location[1], imm.Location[2])
+		//fmt.Printf("moatrix: %v\n", movMatrix)
+		a, b := lsystem.Draw(CurrentScene, scene_camera.ViewMatrix(), lsystem.S(imm.Lsys), movMatrix, true)
+		verticesNative = append(verticesNative, a...)
+		colorsNative = append(colorsNative, b...)
+	}
+
+	movMatrix = mgl32.Ident4()
+	movMatrix = Move(movMatrix, x, y, 0)
+	//fmt.Printf("moatrix: %v\n", movMatrix)
+	a, b := lsystem.Draw(CurrentScene, scene_camera.ViewMatrix(), lsystem.S(" HR s s s s s Arrow "), movMatrix, true)
+	verticesNative = append(verticesNative, a...)
+	colorsNative = append(colorsNative, b...)
+
 	return verticesNative, colorsNative
+}
+
+var x, y float32
+
+func handleMouseMove(win *glfw.Window, xpos float64, ypos float64) {
+	w, h := win.GetSize()
+	x = float32((xpos-float64(w)/2)/float64(w)) * 2
+	y = -float32((ypos-float64(h)/2)/float64(h)) * 2
+
+}
+
+func handleMouseButton(w *glfw.Window, button glfw.MouseButton, action glfw.Action, mod glfw.ModifierKey) {
+	log.Printf("Got mouse button %v,%v,%v", button, mod, action)
+	fmt.Println("Click at", x, y)
+	imm := immob{[]float32{x, y, rand.Float32()}, " HR s s s s s Arrow "}
+	sceneList = append(sceneList, imm)
+	//handleKey(w, key, scancode, action, mods)
 }
