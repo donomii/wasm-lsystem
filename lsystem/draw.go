@@ -107,7 +107,7 @@ func Draw(CurrentScene *Scene, camera mgl32.Mat4, start []string, trans mgl32.Ma
 	if buildMode {
 		//fmt.Println(ruleBook())
 		commands = runRuleset(start, ruleBook())
-		trans = mgl32.Ident4()
+		//trans = mgl32.Ident4()
 	}
 	//commands = runRules(commands, rules(), 2)
 
