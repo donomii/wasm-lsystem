@@ -143,12 +143,12 @@ func gfxMain(win *glfw.Window, state *State) {
 	elapsed := now - state.PreviousTime
 
 	// Configure global settings
-	gl.Disable(gl.DEPTH_TEST)
+
 	gl.UseProgram(state.Program)
 	gl.ClearColor(0.5, 0.5, 0.5, 1.0)
 
 	gl.Disable(gl.BLEND)
-	gl.Disable(gl.DEPTH_TEST)
+	gl.Enable(gl.DEPTH_TEST)
 
 	gl.PolygonMode(gl.FRONT_AND_BACK, gl.FILL)
 
@@ -166,7 +166,7 @@ func gfxMain(win *glfw.Window, state *State) {
 		checkGlError()
 		gl.BindBuffer(gl.ARRAY_BUFFER, state.Vbo)
 		checkGlError()
-		gl.BufferData(gl.ARRAY_BUFFER, len(vertices)*4, gl.Ptr(vertices), gl.DYNAMIC_DRAW)
+		gl.BufferData(gl.ARRAY_BUFFER, len(vertices)*4, gl.Ptr(vertices), gl.STATIC_DRAW)
 		checkGlError()
 		gl.VertexAttribPointer(uint32(state.VertAttrib), 3, gl.FLOAT, false, 0, gl.PtrOffset(0))
 		checkGlError()
@@ -175,7 +175,7 @@ func gfxMain(win *glfw.Window, state *State) {
 
 		gl.BindBuffer(gl.ARRAY_BUFFER, state.Cbo)
 		checkGlError()
-		gl.BufferData(gl.ARRAY_BUFFER, len(colours)*4, gl.Ptr(colours), gl.DYNAMIC_DRAW)
+		gl.BufferData(gl.ARRAY_BUFFER, len(colours)*4, gl.Ptr(colours), gl.STATIC_DRAW)
 		checkGlError()
 		gl.VertexAttribPointer(uint32(state.ColourAttrib), 4, gl.FLOAT, false, 0, gl.PtrOffset(0))
 		checkGlError()
