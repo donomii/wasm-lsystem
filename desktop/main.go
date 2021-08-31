@@ -55,6 +55,9 @@ var rotX, roty float64
 var CurrentScene *lsystem.Scene
 var scene_camera *sceneCamera.SceneCamera = sceneCamera.New()
 
+var sceneList []immob
+var scale float32 = 1
+
 func drainChannel(ch chan []byte) {
 	for {
 		<-ch
@@ -78,6 +81,24 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
+	objs := []string{
+		" HR s s s s s s s s leaf ",
+		" HR s s s s s Arrow ",
+		" HR s s s s s s s s Flower ",
+		" HR s s s s s s s s Circle ",
+		" HR s s s s s s s s Icosahedron ",
+	}
+	scale = 4.0 //scale + 1.0
+	//fmt.Printf("scale: %v\n", scale)
+
+	sceneList = []immob{}
+	for i := 0; i < 5; i++ {
+		imm := immob{[]float32{-0.9, float32(i)/scale - 0.5, 0.0}, objs[i]}
+		sceneList = append(sceneList, imm)
+
+	}
+
 	go func() {
 		for {
 			time.Sleep(50 * time.Millisecond)
@@ -120,8 +141,8 @@ func main() {
 	state.Cao, state.Cbo, state.ColourAttrib = make_array_buffer("s_col", 4, state.Program, gl.FLOAT)
 	gl.BindFragDataLocation(state.Program, 0, gl.Str("outputColor\x00"))
 	resetCam(scene_camera)
-	sceneList := lsystem.InitScenes(scene_camera)
-	CurrentScene = sceneList[0]
+	sceneLibList := lsystem.InitScenes(scene_camera)
+	CurrentScene = sceneLibList[0]
 	CurrentScene.Init(CurrentScene)
 
 	for !win.ShouldClose() {
@@ -209,9 +230,6 @@ type immob struct {
 	Lsys     string
 }
 
-var sceneList []immob
-var scale float32 = 1
-
 func calcLsys() ([]float32, []float32) {
 
 	movMatrix := mgl32.Ident4()
@@ -244,36 +262,11 @@ func calcLsys() ([]float32, []float32) {
 				[ p p p S HR Prism ] TF TF TF
 				[ p p p S HR Prism1 ] TF TF TF
 				[   s s HR p p p Circle ] TF TF TF
-				
-				
-					
-				
-				
-			
+
 				
 			]
 			
 			`), movMatrix, true)
-
-	scale = 10.0 //scale + 1.0
-	//fmt.Printf("scale: %v\n", scale)
-
-	/*
-		objs := []string{
-			" HR s s s s s s s s leaf ",
-			" HR s s s s s Arrow ",
-			" HR s s s s s s s s Flower ",
-			" HR s s s s s s s s Circle ",
-			" HR s s s s s s s s Icosahedron ",
-		}
-
-			sceneList = []immob{}
-			for i := 0; i < 5; i++ {
-				imm := immob{[]float32{float32(i) / scale, float32(i) / scale, float32(i) / scale}, objs[i]}
-				sceneList = append(sceneList, imm)
-
-			}
-	*/
 
 	for _, imm := range sceneList {
 		movMatrix := mgl32.Ident4()
