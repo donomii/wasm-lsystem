@@ -11,6 +11,7 @@ import (
 	"os"
 	"runtime"
 	"runtime/debug"
+	"strconv"
 	"time"
 
 	//"time"
@@ -23,6 +24,10 @@ import (
 
 	_ "embed"
 )
+
+var objs []string
+var currentTemplate = " HR s s s s s Arrow "
+var drag bool
 
 // Arrange that main.main runs on main thread.
 func init() {
@@ -39,6 +44,7 @@ type State struct {
 	Cbo            uint32
 	Texture        uint32
 	TextureUniform int32
+	MVPuniform     int32
 	VertAttrib     int32
 	ColourAttrib   int32
 	Angle          float64
@@ -82,7 +88,7 @@ func main() {
 		panic(err)
 	}
 
-	objs := []string{
+	objs = []string{
 		" HR s s s s s s s s leaf ",
 		" HR s s s s s Arrow ",
 		" HR s s s s s s s s Flower ",
@@ -111,6 +117,11 @@ func main() {
 	win.SetKeyCallback(func(w *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
 		log.Printf("Got key %c,%v,%v,%v", key, key, mods, action)
 		//handleKey(w, key, scancode, action, mods)
+		val := fmt.Sprintf("%c", key)
+		index, _ := strconv.Atoi(val)
+		if index > 0 {
+			currentTemplate = objs[index-1]
+		}
 	})
 
 	win.SetMouseButtonCallback(handleMouseButton)
@@ -181,6 +192,16 @@ func gfxMain(win *glfw.Window, state *State) {
 
 		vertices, colours := calcLsys()
 
+		//projection := mgl32.Perspective(mgl32.DegToRad(45.0), 1.0, 0.1, 10.0)
+		//cam := mgl32.LookAtV(mgl32.Vec3{0, 0, 0}, mgl32.Vec3{0, 0, 0}, mgl32.Vec3{0, 1, 0})
+		camera := scene_camera.ViewMatrix() //mgl32.Ident4() //cam.Mul4(projection)
+		//log.Println("mvp", camera)
+		cameraUniform := gl.GetUniformLocation(state.Program, gl.Str("MVP\x00"))
+		checkGlError()
+		//	mvp := scene_camera.ViewMatrix()
+		gl.UniformMatrix4fv(cameraUniform, 1, false, &camera[0])
+		checkGlError()
+
 		//fmt.Printf("array len: %v\n", len(colours))
 
 		gl.BindVertexArray(state.Vao)
@@ -188,6 +209,7 @@ func gfxMain(win *glfw.Window, state *State) {
 		gl.BindBuffer(gl.ARRAY_BUFFER, state.Vbo)
 		checkGlError()
 		gl.BufferData(gl.ARRAY_BUFFER, len(vertices)*4, gl.Ptr(vertices), gl.STATIC_DRAW)
+		//log.Println(vertices)
 		checkGlError()
 		gl.VertexAttribPointer(uint32(state.VertAttrib), 3, gl.FLOAT, false, 0, gl.PtrOffset(0))
 		checkGlError()
@@ -233,10 +255,12 @@ type immob struct {
 func calcLsys() ([]float32, []float32) {
 
 	movMatrix := mgl32.Ident4()
-	movMatrix = Move(movMatrix, 1.0, 0.0, 0.0)
+	//movMatrix = Move(movMatrix, 1.0, 0.0, 0.0)
 
 	verticesNative, colorsNative := lsystem.Draw(CurrentScene, scene_camera.ViewMatrix(), lsystem.S(`
-			Colour254,254,254 deg30 s s s s  r r F p p p f f f f [ HR
+			Colour254,254,254 
+			HR s s s s s s s s Icosahedron 
+			deg30 s s s s  r r F p p p f f f f [ HR
 				s s s s
 				[ s s HR Icosahedron ] TF TF TF TF 
 				[ HR Tetrahedron ] Arrow  F  Arrow  F  Arrow  F  
@@ -280,7 +304,7 @@ func calcLsys() ([]float32, []float32) {
 	movMatrix = mgl32.Ident4()
 	movMatrix = Move(movMatrix, x, y, 0)
 	//fmt.Printf("moatrix: %v\n", movMatrix)
-	a, b := lsystem.Draw(CurrentScene, scene_camera.ViewMatrix(), lsystem.S(" HR s s s s s Arrow "), movMatrix, true)
+	a, b := lsystem.Draw(CurrentScene, scene_camera.ViewMatrix(), lsystem.S(currentTemplate), movMatrix, true)
 	verticesNative = append(verticesNative, a...)
 	colorsNative = append(colorsNative, b...)
 
@@ -291,15 +315,47 @@ var x, y float32
 
 func handleMouseMove(win *glfw.Window, xpos float64, ypos float64) {
 	w, h := win.GetSize()
+	lastx := x
+	lasty := y
+
 	x = float32((xpos-float64(w)/2)/float64(w)) * 2
 	y = -float32((ypos-float64(h)/2)/float64(h)) * 2
+	deltax := x - lastx
+	deltay := y - lasty
+
+	//log.Printf("Mouse at %v,%v. moved: %v,%v", x, y, deltax, deltay)
+	if drag {
+		scene_camera.RotateY(deltax)
+		scene_camera.RotateX(deltay)
+	}
 
 }
 
 func handleMouseButton(w *glfw.Window, button glfw.MouseButton, action glfw.Action, mod glfw.ModifierKey) {
 	log.Printf("Got mouse button %v,%v,%v", button, mod, action)
 	fmt.Println("Click at", x, y)
-	imm := immob{[]float32{x, y, rand.Float32()}, " HR s s s s s Arrow "}
-	sceneList = append(sceneList, imm)
+	switch button {
+
+	case glfw.MouseButton1:
+		imm := immob{[]float32{x, y, rand.Float32()}, currentTemplate}
+		sceneList = append(sceneList, imm)
+	case glfw.MouseButton2:
+		if action == glfw.Press {
+			drag = true
+			log.Println("Drag on")
+		}
+		if action == glfw.Release {
+			drag = false
+			log.Println("Drag off")
+		}
+	case glfw.MouseButton3:
+		inv := scene_camera.ViewMatrix().Inv()
+		close := mgl32.Vec4{x, y, -1, 1}
+		far := mgl32.Vec4{x, y, 1, 1}
+		closeW := inv.Mul4x1(close)
+		farW := inv.Mul4x1(far)
+		log.Printf("Close: %v, Far: %v\n", closeW, farW)
+
+	}
 	//handleKey(w, key, scancode, action, mods)
 }

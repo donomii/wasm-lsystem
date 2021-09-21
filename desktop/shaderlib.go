@@ -143,11 +143,11 @@ var vertexShader = `
 #version 330
 layout(location = 1) in vec4 s_col;
 layout(location = 2) in vec3 vert;
-
+ uniform  mat4 MVP;
 out  vec4 fragCol;
 
 void main() {
-    gl_Position = vec4(vert, 1);
+    gl_Position = MVP*vec4(vert, 1);
 	fragCol = s_col;
 	fragCol.a=1.0;
 	//fragCol =  vec4(1.0,0.0,0.0,1.0)+s_col;
