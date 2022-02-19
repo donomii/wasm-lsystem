@@ -1,10 +1,16 @@
 {
     "WorkingDir": ".",
     "SourceDir": [
-        "."
+        ".",
+        "lsystem"
     ],
-    "SourceExt": [".c", ".cpp", ".go", ".h"],
-    "BuildCmd": "makefile.bat",
+    "SourceExt": [
+        ".c",
+        ".cpp",
+        ".go",
+        ".h"
+    ],
+    "BuildCmd": "make",
     "RunCmd": "wasm-rotating-cube.exe",
     "Decreasing": 1
 }

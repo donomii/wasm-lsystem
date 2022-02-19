@@ -7,6 +7,8 @@ import (
 	"github.com/donomii/sceneCamera"
 
 	"./lsystem"
+	"encoding/json"
+	"fmt"
 
 	"github.com/bobcob7/wasm-rotating-cube/gltypes"
 	"github.com/go-gl/mathgl/mgl32"
@@ -18,6 +20,128 @@ var (
 	gl      js.Value
 	glTypes gltypes.GLTypes
 )
+
+var camera *sceneCamera.SceneCamera
+var CurrentScene *lsystem.Scene
+var sceneList []*lsystem.Scene
+var movMatrix mgl32.Mat4
+var offset []float32 = []float32{0, 0, 0}
+var rotate []float32 = []float32{0, 0, 0}
+var lastMouse []float32 = []float32{0, 0, 0}
+var controlLeft bool = false
+var altLeft bool = false
+
+func mouseHandler(x, y, button int) (string, error) {
+	if button == 29 {
+		lastMouse = []float32{float32(x), float32(y), 0}
+	}
+	dx := float32(x) - lastMouse[0]
+	dy := float32(y) - lastMouse[1]
+	if altLeft {
+		offset = []float32{offset[0] + dx/500, offset[1] + -1.0*dy/500, 0}
+	} else {
+		rotate = []float32{rotate[0] + dy/500, rotate[1] + -1.0*dx/500, 0}
+	}
+	lastMouse = []float32{float32(x), float32(y), 0}
+	//width := 600
+	/*cx, cy, cz := camera.Position()
+	camera.SetPosition(cx+float32(x), cy, cz)
+	//camera.RotateY(float32(x) / float32(width) * -1.0)
+	cx, cy, cz = camera.Position()
+	*/
+	//movMatrix = Move(movMatrix, float32(x), 0, 0)
+	// movMatrix = Rotate(movMatrix, float32(x), 0, 0)
+
+	return fmt.Sprintf("offset: %v, dx %v, dy %v, button %v", offset, dx, dy, button), nil
+}
+
+func mouseWrapper() js.Func {
+	jsonFunc := js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+		if len(args) != 3 {
+			return "Invalid no of arguments passed"
+		}
+		x := args[0].Int()
+		y := args[1].Int()
+		button := args[2].Int()
+
+		//fmt.Printf("input %s\n", inputJSON)
+		pretty, err := mouseHandler(x, y, button)
+		if err != nil {
+			//fmt.Printf("unable to convert to json %s\n", err)
+			return err.Error()
+		}
+		return pretty
+	})
+	return jsonFunc
+}
+
+func keyHandler(key int, code string, alt bool, meta bool, ctrl bool, shift bool, button int) (string, error) {
+	if code == "AltLeft" {
+		if button == 1 {
+			altLeft = true
+		} else {
+			altLeft = false
+		}
+	}
+	return fmt.Sprintf("key: %v, code: %v, alt %v, meta %v, ctrl %v, shift %v, button %v", key, code, alt, meta, ctrl, shift, button), nil
+}
+func keyWrapper() js.Func {
+	//keyEvent(event.keyCode, KeyboardEvent.code, KeyboardEvent.altKey, KeyboardEvent.metaKey,KeyboardEvent.ctrlKey, KeyboardEvent.shiftKey, 29));
+
+	jsonFunc := js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+		if len(args) != 7 {
+			return "Invalid no of arguments passed"
+		}
+		key := args[0].Int()
+		code := args[1].String()
+		alt := args[2].Bool()
+		meta := args[3].Bool()
+		ctrl := args[4].Bool()
+		shift := args[5].Bool()
+		button := args[6].Int()
+
+		//fmt.Printf("input %s\n", inputJSON)
+		pretty, err := keyHandler(key, code, alt, meta, ctrl, shift, button)
+		if err != nil {
+			//fmt.Printf("unable to convert to json %s\n", err)
+			return err.Error()
+		}
+		return pretty
+	})
+	return jsonFunc
+}
+
+func prettyJson(input string) (string, error) {
+	var raw interface{}
+	if err := json.Unmarshal([]byte(input), &raw); err != nil {
+		return "", err
+	}
+	pretty, err := json.MarshalIndent(raw, "", "  ")
+	if err != nil {
+		return "", err
+	}
+	return string(pretty), nil
+}
+
+func jsonWrapper() js.Func {
+	jsonFunc := js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+
+		CurrentScene := sceneList[1]
+		CurrentScene.Init(CurrentScene)
+		if len(args) != 1 {
+			return "Invalid no of arguments passed"
+		}
+		inputJSON := args[0].String()
+		//fmt.Printf("input %s\n", inputJSON)
+		pretty, err := prettyJson(inputJSON)
+		if err != nil {
+			//fmt.Printf("unable to convert to json %s\n", err)
+			return err.Error()
+		}
+		return pretty
+	})
+	return jsonFunc
+}
 
 //// BUFFERS + SHADERS ////
 // Shamelessly copied from https://www.tutorialspoint.com/webgl/webgl_cube_rotation.htm //
@@ -84,13 +208,16 @@ func resetCam(camera *sceneCamera.SceneCamera) {
 }
 
 func main() {
-	var camera *sceneCamera.SceneCamera = sceneCamera.New()
+	js.Global().Set("formatJSON", jsonWrapper())
+	js.Global().Set("mouseEvent", mouseWrapper())
+	js.Global().Set("keyEvent", keyWrapper())
+	camera = sceneCamera.New()
 	resetCam(camera)
 	//Init lystem
 	lsystem.InitGallery()
 
-	sceneList := lsystem.InitScenes(camera)
-	CurrentScene := sceneList[0]
+	sceneList = lsystem.InitScenes(camera)
+	CurrentScene = sceneList[0]
 	CurrentScene.Init(CurrentScene)
 	//sceneString := lsystem.Expand(CurrentScene.Gallery[0])
 
@@ -195,7 +322,7 @@ func main() {
 	gl.Call("uniformMatrix4fv", ViewMatrix, false, typedViewMatrixBuffer)
 
 	//// Drawing the Cube ////
-	movMatrix := mgl32.Ident4()
+	movMatrix = mgl32.Ident4()
 	var renderFrame js.Func
 	var tmark float32
 	var rotation = float32(0)
@@ -209,9 +336,6 @@ func main() {
 		tdiff := now - tmark
 		tmark = now
 		rotation = rotation + float32(tdiff)/500
-
-		// Do new model matrix calculations
-		movMatrix = mgl32.Ident4()
 
 		//movMatrix = Rotate(movMatrix, 0.5*rotation, 0.3*rotation, 0.2*rotation)
 		//movMatrix = Move(movMatrix, 1.0, 0.0, 0.0)
@@ -230,7 +354,15 @@ func main() {
 		gl.Call("clear", glTypes.DepthBufferBit)
 
 		for i := 0; i < 1; i = i + 1 {
+			// Do new model matrix calculations
+			movMatrix = mgl32.Ident4()
 			movMatrix = Move(movMatrix, 1.0, 0.0, 0.0)
+			if len(rotate) > 0 {
+				movMatrix = Rotate(movMatrix, rotate[0], rotate[1], rotate[2])
+			}
+			if len(offset) > 0 {
+				movMatrix = Move(movMatrix, offset[0], offset[1], offset[2])
+			}
 
 			//fmt.Println("Example movMatrix: ", movMatrix)
 			// Convert model matrix to a JS TypedArray
@@ -243,43 +375,7 @@ func main() {
 			//gl.Call("drawElements", glTypes.Triangles, len(indicesNative), glTypes.UnsignedShort, 0)
 			//lsystem.Draw(CurrentScene, camera.ViewMatrix(), lsystem.S(" F F F deg20 f cube r p f cube r p f HR cube r p f cube r p f cube"), movMatrix, true, true, ModelMatrix, gl, indicesNative)
 			//lsystem.Draw(CurrentScene, camera.ViewMatrix(), lsystem.S(" F F F cube f cube f cube HR deg90 f p  cube  f cube  f cube HR deg90 f p  cube  f cube  f cube"), movMatrix, true, true, ModelMatrix, gl, indicesNative)
-			verticesNative, colorsNative := lsystem.Draw(CurrentScene, camera.ViewMatrix(), lsystem.S(`
-			Colour254,254,254 deg30 r r F p p p f f f f [
-				s s s s
-				[ s s HR Icosahedron ] TF TF TF TF 
-				[ HR Tetrahedron ] Arrow  F  Arrow  F  Arrow  F  
-				[ p p p s s s HR starburst ] Arrow  F  Arrow  F  Arrow  F 
-				[ p p p s s HR leaf ] Arrow  F  Arrow  F  Arrow  F 	
-				
-				[ p p p s s s HR lineStar ] TF TF TF
-				[ p p p s s HR Flower ] TF TF TF
-				[ p p p s s HR Flower12 ] TF TF TF
-				[ p p p s s HR Flower11 ] TF TF TF
-				[ p p p s s HR Flower10 ] TF TF TF
-				
-				
-			]
-			
-			p p p F P P P
-			[ s s s s
-			
-				
-				[ p p p S S S HR Square1 ] TF TF TF
-				[ p p p S S S S S S HR Face ] TF TF TF
-				[ p p p S S S HR Arrow ] TF TF TF
-				[ p p p S HR Prism ] TF TF TF
-				[ p p p S HR Prism1 ] TF TF TF
-				[   s s HR p p p Circle ] TF TF TF
-				
-				
-					
-				
-				
-			
-				
-			]
-			
-			`), movMatrix, true)
+			verticesNative, colorsNative := lsystem.Draw(CurrentScene, camera.ViewMatrix(), lsystem.S(lsystem.Icosahedron()), movMatrix, true)
 			/*
 				[ p p p s s FlowerField ] TF TF TF
 				[ p p p s  s s Plant ] TF TF TF
