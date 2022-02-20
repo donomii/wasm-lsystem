@@ -30,6 +30,7 @@ var rotate []float32 = []float32{0, 0, 0}
 var lastMouse []float32 = []float32{0, 0, 0}
 var controlLeft bool = false
 var altLeft bool = false
+var gallerySelect = 0
 
 func mouseHandler(x, y, button int) (string, error) {
 	if button == 29 {
@@ -82,6 +83,9 @@ func keyHandler(key int, code string, alt bool, meta bool, ctrl bool, shift bool
 		} else {
 			altLeft = false
 		}
+	}
+	if code == "KeyN" {
+		gallerySelect = (gallerySelect + 1) % len(lsystem.PlantGallery)
 	}
 	return fmt.Sprintf("key: %v, code: %v, alt %v, meta %v, ctrl %v, shift %v, button %v", key, code, alt, meta, ctrl, shift, button), nil
 }
@@ -375,7 +379,7 @@ func main() {
 			//gl.Call("drawElements", glTypes.Triangles, len(indicesNative), glTypes.UnsignedShort, 0)
 			//lsystem.Draw(CurrentScene, camera.ViewMatrix(), lsystem.S(" F F F deg20 f cube r p f cube r p f HR cube r p f cube r p f cube"), movMatrix, true, true, ModelMatrix, gl, indicesNative)
 			//lsystem.Draw(CurrentScene, camera.ViewMatrix(), lsystem.S(" F F F cube f cube f cube HR deg90 f p  cube  f cube  f cube HR deg90 f p  cube  f cube  f cube"), movMatrix, true, true, ModelMatrix, gl, indicesNative)
-			verticesNative, colorsNative := lsystem.Draw(CurrentScene, camera.ViewMatrix(), lsystem.S(lsystem.Icosahedron()), movMatrix, true)
+			verticesNative, colorsNative := lsystem.Draw(CurrentScene, camera.ViewMatrix(), lsystem.S(lsystem.PlantGallery[gallerySelect]), movMatrix, true)
 			/*
 				[ p p p s s FlowerField ] TF TF TF
 				[ p p p s  s s Plant ] TF TF TF

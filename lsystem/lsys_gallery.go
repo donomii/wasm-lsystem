@@ -80,7 +80,7 @@ func InitGallery() []string {
 
 }
 
-var plantGallery []string = []string{
+var PlantGallery []string = []string{
 	`s s s s [ [                 [ A1.5707 Colour255,0,0 [ Tetrahedron ] P [ P P HR Circle ] [ P HR Circle ] HR Tetrahedron ] ] ]`,
 	`s s s s HR HR HR HR [ s F F                            A1.5707 Colour255,0,0 LightsOn Icosahedron LightsOff ]`,
 	"A1.5707 HR S [ Arrow Y P ] Y Y Arrow",

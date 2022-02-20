@@ -1,9 +1,9 @@
 package main
 
 import (
-	"net/http"
-	"log"
 	"io/ioutil"
+	"log"
+	"net/http"
 	"runtime"
 )
 
@@ -37,6 +37,6 @@ func main() {
 		w.WriteHeader(http.StatusOK)
 		w.Write(wasmData)
 	})
-	log.Printf("Server started on :8081\n")
-	log.Fatal(http.ListenAndServe(":8081", nil))
+	log.Printf("Server started on 0.0.0.0:8081\n")
+	log.Fatal(http.ListenAndServe("0.0.0.0:8081", nil))
 }

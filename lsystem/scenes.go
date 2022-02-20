@@ -4,8 +4,8 @@ package lsystem
 import (
 	"time"
 
-	"github.com/donomii/sceneCamera"
 	"../tween"
+	"github.com/donomii/sceneCamera"
 )
 
 type Scene struct {
@@ -24,7 +24,7 @@ func start_clock(v *float32, start, end, duration float32) {
 func InitScenes(camera *sceneCamera.SceneCamera) []*Scene {
 	var plantScene Scene
 	plantScene.Camera = camera
-	plantScene.Gallery = plantGallery
+	plantScene.Gallery = PlantGallery
 	plantScene.Init = func(s *Scene) {
 		start_clock(&s.Clock, 0.0, 1000.0, 4000.0)
 	}

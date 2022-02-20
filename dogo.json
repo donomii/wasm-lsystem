@@ -8,7 +8,8 @@
         ".c",
         ".cpp",
         ".go",
-        ".h"
+        ".h",
+	".html"
     ],
     "BuildCmd": "make",
     "RunCmd": "wasm-rotating-cube.exe",
