@@ -77,6 +77,7 @@ func mouseWrapper() js.Func {
 }
 
 func keyHandler(key int, code string, alt bool, meta bool, ctrl bool, shift bool, button int) (string, error) {
+
 	if code == "AltLeft" {
 		if button == 1 {
 			altLeft = true
@@ -84,8 +85,10 @@ func keyHandler(key int, code string, alt bool, meta bool, ctrl bool, shift bool
 			altLeft = false
 		}
 	}
-	if code == "KeyN" {
-		gallerySelect = (gallerySelect + 1) % len(lsystem.PlantGallery)
+	if button == 1 {
+		if code == "KeyN" {
+			gallerySelect = (gallerySelect + 1) % len(lsystem.PlantGallery)
+		}
 	}
 	return fmt.Sprintf("key: %v, code: %v, alt %v, meta %v, ctrl %v, shift %v, button %v", key, code, alt, meta, ctrl, shift, button), nil
 }
@@ -206,8 +209,8 @@ func Move(movMatrix mgl32.Mat4, x, y, z float32) mgl32.Mat4 {
 
 func resetCam(camera *sceneCamera.SceneCamera) {
 	camera.Reset()
-	camera.SetPosition(0, 0, 1)
-	camera.Translate(0.0, 0.0, 0.0)
+	camera.SetPosition(0, 0, 2.0)
+	//camera.Translate(0.0, 0.0, 0.0)
 	camera.LookAt(0.0, 0.0, 0.0)
 }
 
@@ -319,7 +322,9 @@ func main() {
 	gl.Call("uniformMatrix4fv", PositionMatrix, false, typedProjMatrixBuffer)
 
 	// Generate and apply view matrix
-	viewMatrix := mgl32.LookAtV(mgl32.Vec3{3.0, 3.0, 3.0}, mgl32.Vec3{0.0, 0.0, 0.0}, mgl32.Vec3{0.0, 1.0, 0.0})
+	//Important, eye pos here must match camera pos!  FIXME read from camera
+	cx, cy, cz := camera.Position()
+	viewMatrix := mgl32.LookAtV(mgl32.Vec3{cx, cy, cz}, mgl32.Vec3{0.0, 0.0, 0.0}, mgl32.Vec3{0.0, 1.0, 0.0})
 	var viewMatrixBuffer *[16]float32
 	viewMatrixBuffer = (*[16]float32)(unsafe.Pointer(&viewMatrix))
 	typedViewMatrixBuffer := gltypes.SliceToTypedArray([]float32((*viewMatrixBuffer)[:]))
@@ -360,15 +365,17 @@ func main() {
 		for i := 0; i < 1; i = i + 1 {
 			// Do new model matrix calculations
 			movMatrix = mgl32.Ident4()
-			movMatrix = Move(movMatrix, 1.0, 0.0, 0.0)
+			//movMatrix = Move(movMatrix, 1.0, 0.0, 0.0)
 			if len(rotate) > 0 {
 				movMatrix = Rotate(movMatrix, rotate[0], rotate[1], rotate[2])
 			}
 			if len(offset) > 0 {
 				movMatrix = Move(movMatrix, offset[0], offset[1], offset[2])
 			}
-
-			//fmt.Println("Example movMatrix: ", movMatrix)
+			/*
+				fmt.Println("Move Coords: ", offset)
+				fmt.Println("Rotate Matrix: ", rotate)
+				camera.Dump()*/
 			// Convert model matrix to a JS TypedArray
 			var modelMatrixBuffer *[16]float32
 			modelMatrixBuffer = (*[16]float32)(unsafe.Pointer(&movMatrix))
