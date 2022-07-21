@@ -19,7 +19,7 @@ import (
 	"../lsystem"
 	"github.com/donomii/sceneCamera"
 	"github.com/go-gl/gl/v3.2-core/gl"
-	"github.com/go-gl/glfw/v3.2/glfw"
+	"github.com/go-gl/glfw/v3.3/glfw"
 	"github.com/go-gl/mathgl/mgl32"
 
 	_ "embed"
@@ -28,6 +28,8 @@ import (
 var objs []string
 var currentTemplate = " HR s s s s s Arrow "
 var drag bool
+
+var UserPos = mgl32.Vec3{0, 0, -1.1}
 
 // Arrange that main.main runs on main thread.
 func init() {
@@ -80,9 +82,10 @@ func main() {
 		panic(err)
 	}
 	glfw.WindowHint(glfw.ContextVersionMajor, 3)
-	glfw.WindowHint(glfw.ContextVersionMinor, 2)
+	glfw.WindowHint(glfw.ContextVersionMinor, 3)
 	glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile)
 	glfw.WindowHint(glfw.OpenGLForwardCompatible, glfw.True)
+	glfw.WindowHint(glfw.TransparentFramebuffer, 1)
 	win, err := glfw.CreateWindow(winWidth, winHeight, "Lsystems", nil, nil)
 	if err != nil {
 		panic(err)
@@ -121,6 +124,18 @@ func main() {
 		index, _ := strconv.Atoi(val)
 		if index > 0 {
 			currentTemplate = objs[index-1]
+		} else {
+			switch val {
+			case "W":
+				UserPos[2] += 0.1
+			case "S":
+				UserPos[2] -= 0.1
+			case "A":
+				UserPos[0] -= 0.1
+			case "D":
+				UserPos[0] += 0.1
+
+			}
 		}
 	})
 
@@ -177,13 +192,15 @@ func gfxMain(win *glfw.Window, state *State) {
 	// Configure global settings
 
 	gl.UseProgram(state.Program)
-	gl.ClearColor(0.5, 0.5, 0.5, 1.0)
+	gl.ClearColor(0.0, 0.0, 0.0, 0.0)
 
 	gl.Disable(gl.BLEND)
 	gl.Enable(gl.DEPTH_TEST)
 
 	gl.PolygonMode(gl.FRONT_AND_BACK, gl.FILL)
-
+	scene_camera.SetPosition(UserPos.X(), UserPos.Y(), UserPos.Z())
+	x, y, z := scene_camera.Position()
+	fmt.Printf("Position: %v,%v,%v\n", x, y, z)
 	if elapsed > 0.050 && 1 != win.GetAttrib(glfw.Iconified) {
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 		angle := state.Angle
@@ -192,9 +209,11 @@ func gfxMain(win *glfw.Window, state *State) {
 
 		vertices, colours := calcLsys()
 
-		//projection := mgl32.Perspective(mgl32.DegToRad(45.0), 1.0, 0.1, 10.0)
+		projection := mgl32.Perspective(mgl32.DegToRad(45.0), 1.0, 0.1, 1000.0)
 		//cam := mgl32.LookAtV(mgl32.Vec3{0, 0, 0}, mgl32.Vec3{0, 0, 0}, mgl32.Vec3{0, 1, 0})
-		camera := scene_camera.ViewMatrix() //mgl32.Ident4() //cam.Mul4(projection)
+		//camera := scene_camera.ViewMatrix()//.Mul4(projection) //mgl32.Ident4() //cam.Mul4(projection)
+
+		camera := projection.Mul4(scene_camera.ViewMatrix())
 		//log.Println("mvp", camera)
 		cameraUniform := gl.GetUniformLocation(state.Program, gl.Str("MVP\x00"))
 		checkGlError()
@@ -233,7 +252,7 @@ func gfxMain(win *glfw.Window, state *State) {
 		win.SwapBuffers()
 
 	}
-	time.Sleep(10 * time.Millisecond)
+	time.Sleep(1 * time.Millisecond)
 }
 
 func Move(movMatrix mgl32.Mat4, x, y, z float32) mgl32.Mat4 {
